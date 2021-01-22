@@ -1,0 +1,41 @@
+trigger:
+  batch: true
+  branches:
+    include:
+      - "*"
+
+variables:
+  BuildConfiguration: Release
+
+steps:
+  - task: NuGetToolInstaller@1
+    displayName: 'Use NuGet 4.9.1'
+    inputs:
+      versionSpec: '4.9.1'
+
+  - task: NuGetCommand@2
+    displayName: 'Restore NuGet Packages'
+    inputs:
+      command: 'restore'
+      restoreSolution: '**/*.sln'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Build Library'
+    inputs:
+      command: 'build'
+      projects: 'src/Dfe.Edis.Kafka/Dfe.Edis.Kafka.csproj'
+      arguments: '--configuration $(BuildConfiguration) --no-restore'
+      
+  - task: DotNetCoreCLI@2
+    displayName: 'Run Unit Tests'
+    inputs:
+      command: test
+      projects: 'src/**/*.UnitTests.csproj'
+      arguments: '--configuration $(BuildConfiguration) --no-restore'
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifacts'
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      ArtifactName: 'drop'
+      publishLocation: 'Container'
