@@ -9,9 +9,9 @@ variables:
 
 steps:
   - task: NuGetToolInstaller@1
-    displayName: 'Use NuGet 4.9.1'
+    displayName: 'Use NuGet 5.8.1'
     inputs:
-      versionSpec: '4.9.1'
+      versionSpec: '5.8.1'
 
   - task: NuGetCommand@2
     displayName: 'Restore NuGet Packages'
@@ -20,18 +20,26 @@ steps:
       restoreSolution: '**/*.sln'
 
   - task: DotNetCoreCLI@2
-    displayName: 'Build Library'
+    displayName: 'Build'
     inputs:
       command: 'build'
       projects: 'src/Dfe.Edis.Kafka/Dfe.Edis.Kafka.csproj'
       arguments: '--configuration $(BuildConfiguration) --no-restore'
       
   - task: DotNetCoreCLI@2
-    displayName: 'Run Unit Tests'
+    displayName: 'Test'
     inputs:
       command: test
       projects: 'src/**/*.UnitTests.csproj'
       arguments: '--configuration $(BuildConfiguration) --no-restore'
+      
+  - task: DotNetCoreCLI@2
+    displayName: 'Pack'
+    inputs:
+      command: 'pack'
+      packagesToPack: 'src/Dfe.Edis.Kafka/Dfe.Edis.Kafka.csproj'
+      nobuild: true
+      versioningScheme: 'off'
 
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Artifacts'
