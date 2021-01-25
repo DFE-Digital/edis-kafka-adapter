@@ -3,6 +3,8 @@ using System.Threading;
 using AutoFixture.NUnit3;
 using Confluent.Kafka;
 using Dfe.Edis.Kafka.Producer;
+using Dfe.Edis.Kafka.SchemaRegistry;
+using Dfe.Edis.Kafka.Serialization;
 using Moq;
 using NUnit.Framework;
 
@@ -29,7 +31,11 @@ namespace Dfe.Edis.Kafka.UnitTests.ProducerTests.KafkaProducerTests
             producerBuilderMock.Setup(b => b.Build())
                 .Returns(producerMock.Object);
 
-            var kafkaProducer = new KafkaProducer<string, BasicObject>(producerBuilderMock.Object);
+            var serializerFactoryMock = new Mock<IKafkaSerializerFactory>();
+            serializerFactoryMock.Setup(f => f.GetValueSerializer<BasicObject>())
+                .Returns(new Mock<IAsyncSerializer<BasicObject>>().Object);
+
+            var kafkaProducer = new KafkaProducer<string, BasicObject>(producerBuilderMock.Object, serializerFactoryMock.Object);
 
             // Act
             kafkaProducer.Flush(timeout);
