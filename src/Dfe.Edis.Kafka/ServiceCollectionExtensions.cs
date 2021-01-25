@@ -4,6 +4,7 @@ using Dfe.Edis.Kafka.Producer;
 using Dfe.Edis.Kafka.SchemaRegistry;
 using Dfe.Edis.Kafka.Serialization;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Dfe.Edis.Kafka
 {
@@ -19,6 +20,16 @@ namespace Dfe.Edis.Kafka
                 };
             }
 
+            services.AddSingleton<IProducerLogger>(serviceProvider =>
+            {
+                var microsoftLogger = serviceProvider.GetService<ILogger<KafkaProducerConnection>>();
+                if (microsoftLogger != null)
+                {
+                    return new MicrosoftLoggingProducerLogger(microsoftLogger);
+                }
+
+                return new NoopProducerLogger();
+            });
             services.AddSingleton<KafkaProducerConnection>();
             services.AddScoped<ISchemaRegistryClient>(serviceProvider =>
             {

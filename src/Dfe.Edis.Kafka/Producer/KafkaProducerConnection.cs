@@ -7,15 +7,17 @@ namespace Dfe.Edis.Kafka.Producer
     {
         private readonly IProducer<byte[], byte[]> _producer;
 
-        public KafkaProducerConnection(KafkaBrokerConfiguration configuration)
+        public KafkaProducerConnection(KafkaBrokerConfiguration configuration, IProducerLogger producerLogger)
         {
             _producer = new ProducerBuilder<byte[], byte[]>(
-                new ProducerConfig
-                {
-                    BootstrapServers = configuration.BootstrapServers,
-                }).Build();
+                    new ProducerConfig
+                    {
+                        BootstrapServers = configuration.BootstrapServers,
+                    })
+                .SetLogHandler(producerLogger.LogMessage)
+                .Build();
         }
-        
+
         internal Handle Handle => _producer.Handle;
 
         public void Dispose()
