@@ -31,7 +31,7 @@ namespace Dfe.Edis.Kafka
                 return new NoopProducerLogger();
             });
             services.AddSingleton<KafkaProducerConnection>();
-            services.AddScoped<ISchemaRegistryClient>(serviceProvider =>
+            services.AddSingleton<ISchemaRegistryClient>(serviceProvider =>
             {
                 var httpClientFactory = serviceProvider.GetService<IHttpClientFactory>();
                 var httpClient = httpClientFactory.CreateClient();
