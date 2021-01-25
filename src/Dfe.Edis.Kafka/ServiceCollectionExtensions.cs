@@ -38,7 +38,11 @@ namespace Dfe.Edis.Kafka
 
                 var schemaRegistryConfiguration = serviceProvider.GetService<KafkaSchemaRegistryConfiguration>();
 
-                return new SchemaRegistryClient(httpClient, schemaRegistryConfiguration);
+                var httpSchemaClient = new SchemaRegistryClient(httpClient, schemaRegistryConfiguration);
+
+                return schemaRegistryConfiguration.CacheTimeout.TotalSeconds > 0
+                    ? (ISchemaRegistryClient)new CachedSchemaRegistryClient(httpSchemaClient, schemaRegistryConfiguration)
+                    : httpSchemaClient;
             });
             services.AddScoped<IKafkaSerializerFactory>(serviceProvider =>
             {
