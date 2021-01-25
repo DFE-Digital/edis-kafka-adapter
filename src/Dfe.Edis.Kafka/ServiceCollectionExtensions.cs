@@ -9,7 +9,7 @@ namespace Dfe.Edis.Kafka
 {
     public static class ServiceCollectionExtensions
     {
-        public static void AddKafkaProducer(this ServiceCollection services, JsonSerializerOptions jsonSerializerOptions = null)
+        public static void AddKafkaProducer(this IServiceCollection services, JsonSerializerOptions jsonSerializerOptions = null)
         {
             if (jsonSerializerOptions == null)
             {
