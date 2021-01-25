@@ -1,0 +1,49 @@
+trigger:
+  batch: true
+  branches:
+    include:
+      - "*"
+
+variables:
+  BuildConfiguration: Release
+
+steps:
+  - task: NuGetToolInstaller@1
+    displayName: 'Use NuGet 5.8.1'
+    inputs:
+      versionSpec: '5.8.1'
+
+  - task: NuGetCommand@2
+    displayName: 'Restore NuGet Packages'
+    inputs:
+      command: 'restore'
+      restoreSolution: '**/*.sln'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Build'
+    inputs:
+      command: 'build'
+      projects: 'src/Dfe.Edis.Kafka/Dfe.Edis.Kafka.csproj'
+      arguments: '--configuration $(BuildConfiguration) --no-restore'
+      
+  - task: DotNetCoreCLI@2
+    displayName: 'Test'
+    inputs:
+      command: test
+      projects: 'src/**/*.UnitTests.csproj'
+      arguments: '--configuration $(BuildConfiguration) --no-restore'
+      
+  - task: DotNetCoreCLI@2
+    displayName: 'Pack'
+    inputs:
+      command: 'pack'
+      packagesToPack: 'src/Dfe.Edis.Kafka/Dfe.Edis.Kafka.csproj'
+      nobuild: true
+      versioningScheme: 'off'
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifacts'
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      ArtifactName: 'drop'
+      publishLocation: 'Container'
