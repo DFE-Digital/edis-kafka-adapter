@@ -24,7 +24,7 @@ namespace Dfe.Edis.Kafka.SchemaRegistry
         public async Task<int[]> ListSchemaVersionsAsync(string subjectName, CancellationToken cancellationToken)
         {
             if (!_schemaVersionListCache.TryGetValue(subjectName, out var cacheItem) ||
-                cacheItem.ExpiryTime > DateTime.Now)
+                cacheItem.ExpiryTime < DateTime.Now)
             {
                 var versions = await _innerClient.ListSchemaVersionsAsync(subjectName, cancellationToken);
                 cacheItem = new CacheItem<int[]>
@@ -41,7 +41,7 @@ namespace Dfe.Edis.Kafka.SchemaRegistry
         public async Task<SchemaDetails> GetSchemaAsync(string subjectName, int version, CancellationToken cancellationToken)
         {
             if (!_schemaDetailsCache.TryGetValue(subjectName, out var cacheItem) ||
-                cacheItem.ExpiryTime > DateTime.Now)
+                cacheItem.ExpiryTime < DateTime.Now)
             {
                 var details = await _innerClient.GetSchemaAsync(subjectName, version, cancellationToken);
                 cacheItem = new CacheItem<SchemaDetails>
