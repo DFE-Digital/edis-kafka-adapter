@@ -27,11 +27,16 @@ namespace Dfe.Edis.Kafka.UnitTests.SerializationTests.KafkaJsonSerializerTests
             },
         }).ToJson();
 
+        private static readonly JsonSerializerOptions DefaultJsonSerializerOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        };
+
         [Test, AutoData]
         public async Task ThenItShouldSerializeAStringCorrectly(string data)
         {
             var schemaRegistryClientMock = GetSchemaRegistryClientMock();
-            var serializer = new KafkaJsonSerializer<string>(schemaRegistryClientMock.Object);
+            var serializer = new KafkaJsonSerializer<string>(schemaRegistryClientMock.Object, DefaultJsonSerializerOptions);
 
             var actual = await serializer.SerializeAsync(data, GetContext());
 
@@ -43,7 +48,7 @@ namespace Dfe.Edis.Kafka.UnitTests.SerializationTests.KafkaJsonSerializerTests
         public async Task ThenItShouldSerializeAnIntegerCorrectly(int data)
         {
             var schemaRegistryClientMock = GetSchemaRegistryClientMock();
-            var serializer = new KafkaJsonSerializer<int>(schemaRegistryClientMock.Object);
+            var serializer = new KafkaJsonSerializer<int>(schemaRegistryClientMock.Object, DefaultJsonSerializerOptions);
 
             var actual = await serializer.SerializeAsync(data, GetContext());
 
@@ -55,7 +60,7 @@ namespace Dfe.Edis.Kafka.UnitTests.SerializationTests.KafkaJsonSerializerTests
         public async Task ThenItShouldSerializeALongCorrectly(long data)
         {
             var schemaRegistryClientMock = GetSchemaRegistryClientMock();
-            var serializer = new KafkaJsonSerializer<long>(schemaRegistryClientMock.Object);
+            var serializer = new KafkaJsonSerializer<long>(schemaRegistryClientMock.Object, DefaultJsonSerializerOptions);
 
             var actual = await serializer.SerializeAsync(data, GetContext());
 
@@ -67,7 +72,7 @@ namespace Dfe.Edis.Kafka.UnitTests.SerializationTests.KafkaJsonSerializerTests
         public async Task ThenItShouldSerializeADateTimeCorrectly(DateTime data)
         {
             var schemaRegistryClientMock = GetSchemaRegistryClientMock();
-            var serializer = new KafkaJsonSerializer<DateTime>(schemaRegistryClientMock.Object);
+            var serializer = new KafkaJsonSerializer<DateTime>(schemaRegistryClientMock.Object, DefaultJsonSerializerOptions);
 
             var actual = await serializer.SerializeAsync(data, GetContext());
 
@@ -79,7 +84,7 @@ namespace Dfe.Edis.Kafka.UnitTests.SerializationTests.KafkaJsonSerializerTests
         public async Task ThenItShouldSerializeAnObjectCorrectly(BasicObject data)
         {
             var schemaRegistryClientMock = GetSchemaRegistryClientMock();
-            var serializer = new KafkaJsonSerializer<BasicObject>(schemaRegistryClientMock.Object);
+            var serializer = new KafkaJsonSerializer<BasicObject>(schemaRegistryClientMock.Object, DefaultJsonSerializerOptions);
 
             var actual = await serializer.SerializeAsync(data, GetContext());
 
@@ -102,7 +107,7 @@ namespace Dfe.Edis.Kafka.UnitTests.SerializationTests.KafkaJsonSerializerTests
                     Subject = "some-test-subject",
                     Schema = DefaultBasicObjectSchemaJson,
                 });
-            var serializer = new KafkaJsonSerializer<BasicObject>(schemaRegistryClientMock.Object);
+            var serializer = new KafkaJsonSerializer<BasicObject>(schemaRegistryClientMock.Object, DefaultJsonSerializerOptions);
 
             await serializer.SerializeAsync(data, GetContext());
 
@@ -117,7 +122,7 @@ namespace Dfe.Edis.Kafka.UnitTests.SerializationTests.KafkaJsonSerializerTests
         public async Task ThenItShouldNotGetSchemaFromRegistryIfNoVersions(BasicObject data)
         {
             var schemaRegistryClientMock = GetSchemaRegistryClientMock();
-            var serializer = new KafkaJsonSerializer<BasicObject>(schemaRegistryClientMock.Object);
+            var serializer = new KafkaJsonSerializer<BasicObject>(schemaRegistryClientMock.Object, DefaultJsonSerializerOptions);
 
             await serializer.SerializeAsync(data, GetContext());
 
@@ -142,7 +147,7 @@ namespace Dfe.Edis.Kafka.UnitTests.SerializationTests.KafkaJsonSerializerTests
                     SchemaType = "AVRO",
                     Subject = "some-test-subject",
                 });
-            var serializer = new KafkaJsonSerializer<BasicObject>(schemaRegistryClientMock.Object);
+            var serializer = new KafkaJsonSerializer<BasicObject>(schemaRegistryClientMock.Object, DefaultJsonSerializerOptions);
 
             var actual = Assert.ThrowsAsync<KafkaSerializationException>(async () =>
                 await serializer.SerializeAsync(data, GetContext()));
@@ -164,7 +169,7 @@ namespace Dfe.Edis.Kafka.UnitTests.SerializationTests.KafkaJsonSerializerTests
                     Subject = "some-test-subject",
                     Schema = DefaultBasicObjectSchemaJson,
                 });
-            var serializer = new KafkaJsonSerializer<BasicObject>(schemaRegistryClientMock.Object);
+            var serializer = new KafkaJsonSerializer<BasicObject>(schemaRegistryClientMock.Object, DefaultJsonSerializerOptions);
 
             var actual = await serializer.SerializeAsync(data, GetContext());
 
@@ -210,7 +215,7 @@ namespace Dfe.Edis.Kafka.UnitTests.SerializationTests.KafkaJsonSerializerTests
                     Subject = "some-test-subject",
                     Schema = jsonSchema,
                 });
-            var serializer = new KafkaJsonSerializer<BasicObject>(schemaRegistryClientMock.Object);
+            var serializer = new KafkaJsonSerializer<BasicObject>(schemaRegistryClientMock.Object, DefaultJsonSerializerOptions);
 
             var actual = Assert.ThrowsAsync<KafkaJsonSchemaSerializationException>(async () =>
                 await serializer.SerializeAsync(data, GetContext()));

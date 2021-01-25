@@ -13,10 +13,12 @@ namespace Dfe.Edis.Kafka.Serialization
     internal class KafkaJsonSerializer<T> : IAsyncSerializer<T>
     {
         private readonly ISchemaRegistryClient _schemaRegistryClient;
+        private readonly JsonSerializerOptions _serializerOptions;
 
-        public KafkaJsonSerializer(ISchemaRegistryClient schemaRegistryClient)
+        public KafkaJsonSerializer(ISchemaRegistryClient schemaRegistryClient, JsonSerializerOptions serializerOptions)
         {
             _schemaRegistryClient = schemaRegistryClient;
+            _serializerOptions = serializerOptions;
         }
         
         public async Task<byte[]> SerializeAsync(T data, SerializationContext context)

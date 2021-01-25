@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Dfe.Edis.Kafka.SchemaRegistry;
 using Dfe.Edis.Kafka.Serialization;
 using Moq;
@@ -11,7 +12,7 @@ namespace Dfe.Edis.Kafka.UnitTests.SerializationTests.KafkaSerializerFactoryTest
         public void ThenItShouldReturnInstanceOfJsonSerializer()
         {
             var schemaRegistryClient = new Mock<ISchemaRegistryClient>();
-            var factory = new KafkaSerializerFactory(schemaRegistryClient.Object);
+            var factory = new KafkaSerializerFactory(schemaRegistryClient.Object, new JsonSerializerOptions());
 
             var actual = factory.GetValueSerializer<BasicObject>();
             
