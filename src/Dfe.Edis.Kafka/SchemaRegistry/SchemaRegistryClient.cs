@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
@@ -30,6 +31,11 @@ namespace Dfe.Edis.Kafka.SchemaRegistry
             var content = response.Content != null ? await response.Content.ReadAsStringAsync() : null;
             if (!response.IsSuccessStatusCode)
             {
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return new int[0];
+                }
+                
                 throw new SchemaRegistryException($"Error listing versions of subject '{subjectName}'",
                     (int) response.StatusCode, urlPath, content);
             }
@@ -47,6 +53,11 @@ namespace Dfe.Edis.Kafka.SchemaRegistry
             var content = response.Content != null ? await response.Content.ReadAsStringAsync() : null;
             if (!response.IsSuccessStatusCode)
             {
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return null;
+                }
+                
                 throw new SchemaRegistryException($"Error listing versions of subject '{subjectName}'",
                     (int) response.StatusCode, urlPath, content);
             }

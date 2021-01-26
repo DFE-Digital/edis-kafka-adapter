@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -32,7 +33,10 @@ namespace Dfe.Edis.Kafka.SchemaRegistry
                     Value = versions,
                     ExpiryTime = DateTime.Now.Add(_configuration.CacheTimeout),
                 };
-                _schemaVersionListCache.AddOrUpdate(subjectName, cacheItem, (key, item) => cacheItem);
+                if (cacheItem.Value != null && cacheItem.Value.Any())
+                {
+                    _schemaVersionListCache.AddOrUpdate(subjectName, cacheItem, (k, v) => cacheItem);
+                }
             }
 
             return cacheItem.Value;
@@ -40,16 +44,21 @@ namespace Dfe.Edis.Kafka.SchemaRegistry
 
         public async Task<SchemaDetails> GetSchemaAsync(string subjectName, int version, CancellationToken cancellationToken)
         {
-            if (!_schemaDetailsCache.TryGetValue(subjectName, out var cacheItem) ||
+            var key = $"{subjectName}::{version}";
+            
+            if (!_schemaDetailsCache.TryGetValue(key, out var cacheItem) ||
                 cacheItem.ExpiryTime < DateTime.Now)
             {
-                var details = await _innerClient.GetSchemaAsync(subjectName, version, cancellationToken);
+                var details = await _innerClient.GetSchemaAsync(key, version, cancellationToken);
                 cacheItem = new CacheItem<SchemaDetails>
                 {
                     Value = details,
                     ExpiryTime = DateTime.Now.Add(_configuration.CacheTimeout),
                 };
-                _schemaDetailsCache.TryAdd(subjectName, cacheItem);
+                if (cacheItem.Value != null)
+                {
+                    _schemaDetailsCache.AddOrUpdate(key, cacheItem, (k, v) => cacheItem);
+                }
             }
 
             return cacheItem.Value;
