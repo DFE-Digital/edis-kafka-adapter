@@ -1,9 +1,12 @@
 using System.Net.Http;
 using System.Text.Json;
+using Dfe.Edis.Kafka.Consumer;
+using Dfe.Edis.Kafka.Logging;
 using Dfe.Edis.Kafka.Producer;
 using Dfe.Edis.Kafka.SchemaRegistry;
 using Dfe.Edis.Kafka.Serialization;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 
 namespace Dfe.Edis.Kafka
@@ -14,22 +17,11 @@ namespace Dfe.Edis.Kafka
         {
             if (jsonSerializerOptions == null)
             {
-                jsonSerializerOptions = new JsonSerializerOptions
-                {
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                };
+                jsonSerializerOptions = GetDefaultJsonSerializerOptions();
             }
 
-            services.AddSingleton<IProducerLogger>(serviceProvider =>
-            {
-                var microsoftLogger = serviceProvider.GetService<ILogger<KafkaProducerConnection>>();
-                if (microsoftLogger != null)
-                {
-                    return new MicrosoftLoggingProducerLogger(microsoftLogger);
-                }
+            AddLogging(services);
 
-                return new NoopProducerLogger();
-            });
             services.AddSingleton<KafkaProducerConnection>();
             services.AddSingleton<ISchemaRegistryClient>(serviceProvider =>
             {
@@ -50,6 +42,34 @@ namespace Dfe.Edis.Kafka
                 return new KafkaSerializerFactory(schemaRegistryClient, jsonSerializerOptions);
             });
             services.AddScoped(typeof(IKafkaProducer<,>), typeof(KafkaProducer<,>));
+        }
+
+        public static void AddKafkaConsumer(this IServiceCollection services, JsonSerializerOptions jsonSerializerOptions = null)
+        {
+            if (jsonSerializerOptions == null)
+            {
+                jsonSerializerOptions = GetDefaultJsonSerializerOptions();
+            }
+
+            AddLogging(services);
+
+            services.AddScoped<IKafkaDeserializerFactory>(serviceProvider => new KafkaDeserializerFactory(jsonSerializerOptions));
+            services.AddScoped(typeof(IKafkaConsumer<,>), typeof(KafkaConsumer<,>));
+        }
+
+
+        private static JsonSerializerOptions GetDefaultJsonSerializerOptions()
+        {
+            return new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            };
+        }
+
+        private static void AddLogging(IServiceCollection services)
+        {
+            services.TryAddSingleton(serviceProvider => new KafkaLoggerFactory(serviceProvider.GetService));
+            services.TryAddSingleton(typeof(IKafkaLogger<>), typeof(KafkaLoggerWrapper<>));
         }
     }
 }

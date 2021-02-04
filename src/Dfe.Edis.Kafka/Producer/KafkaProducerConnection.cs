@@ -1,5 +1,6 @@
 using System;
 using Confluent.Kafka;
+using Dfe.Edis.Kafka.Logging;
 
 namespace Dfe.Edis.Kafka.Producer
 {
@@ -7,8 +8,9 @@ namespace Dfe.Edis.Kafka.Producer
     {
         private readonly IProducer<byte[], byte[]> _producer;
 
-        public KafkaProducerConnection(KafkaBrokerConfiguration configuration, IProducerLogger producerLogger)
+        public KafkaProducerConnection(KafkaBrokerConfiguration configuration, IKafkaLogger<KafkaProducerConnection> logger)
         {
+            var producerLogger = new ProducerLogger(logger);
             _producer = new ProducerBuilder<byte[], byte[]>(
                     new ProducerConfig
                     {
