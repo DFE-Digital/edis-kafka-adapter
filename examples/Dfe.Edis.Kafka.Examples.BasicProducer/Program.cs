@@ -3,7 +3,7 @@ using System.Threading;
 using Dfe.Edis.Kafka.Producer;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Dfe.Edis.Kafka.Examples.BasicUsage
+namespace Dfe.Edis.Kafka.Examples.BasicProducer
 {
     class Program
     {
@@ -12,9 +12,14 @@ namespace Dfe.Edis.Kafka.Examples.BasicUsage
             Console.WriteLine("Setting up; please wait...");
 
             var serviceCollection = new ServiceCollection();
+            serviceCollection.AddHttpClient();
             serviceCollection.AddSingleton(new KafkaBrokerConfiguration
             {
                 BootstrapServers = "localhost:9092"
+            });
+            serviceCollection.AddSingleton(new KafkaSchemaRegistryConfiguration
+            {
+                BaseUrl = "http://localhost:8081",
             });
             serviceCollection.AddKafkaProducer();
             var serviceProvider = serviceCollection.BuildServiceProvider();
