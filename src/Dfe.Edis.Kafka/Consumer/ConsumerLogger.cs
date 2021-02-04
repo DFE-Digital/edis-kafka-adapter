@@ -15,7 +15,6 @@ namespace Dfe.Edis.Kafka.Consumer
         public void Log(IConsumer<TKey, TValue> consumer, LogMessage logMessage)
         {
             _logger.Log(logMessage);
-            _logger.Log(logMessage);
         }
     }
 }
