@@ -6,7 +6,7 @@ using Confluent.Kafka;
 
 namespace Dfe.Edis.Kafka.Serialization
 {
-    internal class KafkaJsonDeserializer<T> : IAsyncDeserializer<T>
+    internal class KafkaJsonDeserializer<T> : IDeserializer<T>
     {
         private readonly JsonSerializerOptions _serializerOptions;
 
@@ -14,17 +14,30 @@ namespace Dfe.Edis.Kafka.Serialization
         {
             _serializerOptions = serializerOptions;
         }
-        
+
         public async Task<T> DeserializeAsync(ReadOnlyMemory<byte> data, bool isNull, SerializationContext context)
         {
             if (isNull)
             {
                 return default;
             }
-            
+
             using (var stream = new MemoryStream(data.ToArray()))
             {
                 return await JsonSerializer.DeserializeAsync<T>(stream, _serializerOptions);
+            }
+        }
+
+        public T Deserialize(ReadOnlySpan<byte> data, bool isNull, SerializationContext context)
+        {
+            if (isNull)
+            {
+                return default;
+            }
+
+            using (var stream = new MemoryStream(data.ToArray()))
+            {
+                return JsonSerializer.DeserializeAsync<T>(stream, _serializerOptions).Result;
             }
         }
     }

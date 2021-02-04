@@ -5,10 +5,10 @@ namespace Dfe.Edis.Kafka.Serialization
 {
     public interface IKafkaDeserializerFactory
     {
-        IAsyncDeserializer<T> GetValueDeserializer<T>();
+        IDeserializer<T> GetValueDeserializer<T>();
     }
     
-    public class KafkaDeserializerFactory
+    public class KafkaDeserializerFactory : IKafkaDeserializerFactory
     {
         private readonly JsonSerializerOptions _jsonSerializerOptions;
 
@@ -17,7 +17,7 @@ namespace Dfe.Edis.Kafka.Serialization
             _jsonSerializerOptions = jsonSerializerOptions;
         }
         
-        public IAsyncDeserializer<T> GetValueDeserializer<T>()
+        public IDeserializer<T> GetValueDeserializer<T>()
         {
             return new KafkaJsonDeserializer<T>(_jsonSerializerOptions);
         }
