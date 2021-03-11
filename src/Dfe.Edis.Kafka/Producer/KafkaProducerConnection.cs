@@ -11,11 +11,19 @@ namespace Dfe.Edis.Kafka.Producer
         public KafkaProducerConnection(KafkaBrokerConfiguration configuration, IKafkaLogger<KafkaProducerConnection> logger)
         {
             var producerLogger = new ProducerLogger(logger);
+            var producerConfig = new ProducerConfig
+            {
+                BootstrapServers = configuration.BootstrapServers,
+            };
+            if (!string.IsNullOrEmpty(configuration.SaslUsername))
+            {
+                producerConfig.SecurityProtocol = SecurityProtocol.SaslSsl;
+                producerConfig.SaslMechanism = SaslMechanism.Plain;
+                producerConfig.SaslUsername = configuration.SaslUsername;
+                producerConfig.SaslPassword = configuration.SaslPassword;
+            }
             _producer = new ProducerBuilder<byte[], byte[]>(
-                    new ProducerConfig
-                    {
-                        BootstrapServers = configuration.BootstrapServers,
-                    })
+                    producerConfig)
                 .SetLogHandler(producerLogger.LogMessage)
                 .Build();
         }
