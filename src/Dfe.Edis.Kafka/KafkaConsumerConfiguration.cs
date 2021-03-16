@@ -4,5 +4,6 @@ namespace Dfe.Edis.Kafka
     {
         public string GroupId { get; set; }
         public int WaitInMsOnPartitionEnd { get; set; } = 1000;
+        public bool StartAtEarliestOffset { get; set; }
     }
 }

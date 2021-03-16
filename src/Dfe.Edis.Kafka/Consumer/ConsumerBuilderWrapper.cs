@@ -18,13 +18,18 @@ namespace Dfe.Edis.Kafka.Consumer
             IKafkaLogger<KafkaConsumer<TKey, TValue>> logger)
         {
             var consumerLogger = new ConsumerLogger<TKey, TValue>(logger);
-            _builder = new ConsumerBuilder<TKey, TValue>(new ConsumerConfig
+            var consumerConfig = new ConsumerConfig
             {
                 BootstrapServers = configuration.BootstrapServers,
                 GroupId = configuration.GroupId,
                 EnableAutoCommit = true,
                 EnablePartitionEof = true,
-            }).SetLogHandler(consumerLogger.Log);
+            };
+            if (configuration.StartAtEarliestOffset)
+            {
+                consumerConfig.AutoOffsetReset = AutoOffsetReset.Earliest;
+            }
+            _builder = new ConsumerBuilder<TKey, TValue>(consumerConfig).SetLogHandler(consumerLogger.Log);
         }
         
         public void SetValueDeserializer(IDeserializer<TValue> deserializer)
