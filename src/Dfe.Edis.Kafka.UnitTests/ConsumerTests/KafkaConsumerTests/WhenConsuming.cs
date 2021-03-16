@@ -22,6 +22,7 @@ namespace Dfe.Edis.Kafka.UnitTests.ConsumerTests.KafkaConsumerTests
         private Mock<IKafkaLogger<KafkaConsumer<string, string>>> _loggerMock;
         private KafkaConsumer<string, string> _consumer;
         private Mock<Func<ConsumedMessage<string, string>, CancellationToken, Task>> _messageHandlerMock;
+        private Mock<Func<CancellationToken, Task>> _endOfPartitionHandlerMock;
 
         [SetUp]
         public void Arrange()
@@ -52,6 +53,10 @@ namespace Dfe.Edis.Kafka.UnitTests.ConsumerTests.KafkaConsumerTests
 
             _messageHandlerMock = new Mock<Func<ConsumedMessage<string, string>, CancellationToken, Task>>();
             _messageHandlerMock.Setup(h => h.Invoke(It.IsAny<ConsumedMessage<string, string>>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
+
+            _endOfPartitionHandlerMock = new Mock<Func<CancellationToken, Task>>();
+            _endOfPartitionHandlerMock.Setup(h => h.Invoke(It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
         }
 
@@ -148,7 +153,7 @@ namespace Dfe.Edis.Kafka.UnitTests.ConsumerTests.KafkaConsumerTests
                 });
 
             var consumeTask = _consumer.RunAsync("topic", cancellationTokenSource.Token);
-            await Task.Delay(10);
+            await Task.Delay(100);
             cancellationTokenSource.Cancel();
             await consumeTask;
 
@@ -161,6 +166,51 @@ namespace Dfe.Edis.Kafka.UnitTests.ConsumerTests.KafkaConsumerTests
                         message.Value == value),
                     cancellationTokenSource.Token),
                 Times.Exactly(consumeCount));
+        }
+
+        [Test, AutoData]
+        public async Task ThenItShouldCallEndOfPartitionHandlerForMessagesThatAreEndOfPartition(string topic, int partition, long offset, string key, string value)
+        {
+            var consumeCount = 0;
+            var eopCount = 0;
+
+            var cancellationTokenSource = new CancellationTokenSource();
+            _consumer.SetMessageHandler(_messageHandlerMock.Object);
+            _consumer.SetEndOfPartitionHandler(_endOfPartitionHandlerMock.Object);
+            _innerConsumerMock.Setup(c => c.Consume(It.IsAny<CancellationToken>()))
+                .Returns(() =>
+                {
+                    consumeCount++;
+                    if (consumeCount % 3 == 0)
+                    {
+                        eopCount++;
+                        return new ConsumeResult<string, string>
+                        {
+                            Topic = topic,
+                            IsPartitionEOF = true,
+                        };
+                    }
+                    
+                    return new ConsumeResult<string, string>
+                    {
+                        Topic = topic,
+                        Partition = partition,
+                        Offset = offset,
+                        Message = new Message<string, string>
+                        {
+                            Key = key,
+                            Value = value,
+                        },
+                    };
+                });
+
+            var consumeTask = _consumer.RunAsync("topic", cancellationTokenSource.Token);
+            await Task.Delay(100);
+            cancellationTokenSource.Cancel();
+            await consumeTask;
+
+            _endOfPartitionHandlerMock.Verify(h => h.Invoke(cancellationTokenSource.Token),
+                Times.Exactly(eopCount));
         }
 
         [Test]

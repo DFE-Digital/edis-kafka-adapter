@@ -10,6 +10,7 @@ namespace Dfe.Edis.Kafka.Consumer
     public interface IKafkaConsumer<TKey, TValue>
     {
         void SetMessageHandler(Func<ConsumedMessage<TKey, TValue>, CancellationToken, Task> messageHandler);
+        void SetEndOfPartitionHandler(Func<CancellationToken, Task> endOfPartitionHandler);
         Task RunAsync(string topic, CancellationToken cancellationToken);
     }
 
@@ -19,6 +20,7 @@ namespace Dfe.Edis.Kafka.Consumer
         private readonly IKafkaLogger<KafkaConsumer<TKey, TValue>> _logger;
         private readonly IConsumer<TKey, TValue> _consumer;
         private Func<ConsumedMessage<TKey, TValue>, CancellationToken, Task> _messageHandler;
+        private Func<CancellationToken, Task> _endOfPartitionHandler;
 
         internal KafkaConsumer(
             IConsumerBuilderWrapper<TKey, TValue> consumerBuilder,
@@ -28,10 +30,11 @@ namespace Dfe.Edis.Kafka.Consumer
         {
             _configuration = configuration;
             _logger = logger;
-            
+
             consumerBuilder.SetValueDeserializer(deserializerFactory.GetValueDeserializer<TValue>());
             _consumer = consumerBuilder.Build();
         }
+
         public KafkaConsumer(
             KafkaConsumerConfiguration configuration,
             IKafkaDeserializerFactory deserializerFactory,
@@ -45,13 +48,18 @@ namespace Dfe.Edis.Kafka.Consumer
             _messageHandler = messageHandler;
         }
 
+        public void SetEndOfPartitionHandler(Func<CancellationToken, Task> endOfPartitionHandler)
+        {
+            _endOfPartitionHandler = endOfPartitionHandler;
+        }
+
         public Task RunAsync(string topic, CancellationToken cancellationToken)
         {
             if (_messageHandler == null)
             {
                 throw new NullReferenceException("Must set message handler before running");
             }
-            
+
             return Task.Factory.StartNew(() =>
             {
                 _consumer.Subscribe(topic);
@@ -80,11 +88,18 @@ namespace Dfe.Edis.Kafka.Consumer
 
             if (result.IsPartitionEOF)
             {
-                _logger.Log(LogLevel.Info, $"Reached the end of partition {result.Partition} for topic {result.Topic}. Waiting {_configuration.WaitInMsOnPartitionEnd}");
+                if (_endOfPartitionHandler != null)
+                {
+                    _logger.Log(LogLevel.Info, $"Reached the end of partition {result.Partition} for topic {result.Topic}. Calling handler");
+                    await _endOfPartitionHandler.Invoke(cancellationToken);
+                }
+
+                _logger.Log(LogLevel.Info,
+                    $"Reached the end of partition {result.Partition} for topic {result.Topic}. Waiting {_configuration.WaitInMsOnPartitionEnd}");
                 Task.Delay(_configuration.WaitInMsOnPartitionEnd, cancellationToken).Wait(cancellationToken);
                 return;
             }
-            
+
             var message = new ConsumedMessage<TKey, TValue>
             {
                 Topic = result.Topic,
