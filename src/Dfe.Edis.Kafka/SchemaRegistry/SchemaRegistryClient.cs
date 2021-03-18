@@ -1,6 +1,8 @@
 using System;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,6 +24,11 @@ namespace Dfe.Edis.Kafka.SchemaRegistry
             _client = client;
 
             _client.BaseAddress = new Uri(configuration.BaseUrl);
+            if (!string.IsNullOrEmpty(configuration.Username))
+            {
+                var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{configuration.Username}:{configuration.Password}"));
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", auth);
+            }
         }
 
         public async Task<int[]> ListSchemaVersionsAsync(string subjectName, CancellationToken cancellationToken)
