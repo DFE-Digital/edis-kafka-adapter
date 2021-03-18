@@ -49,7 +49,7 @@ namespace Dfe.Edis.Kafka.SchemaRegistry
             if (!_schemaDetailsCache.TryGetValue(key, out var cacheItem) ||
                 cacheItem.ExpiryTime < DateTime.Now)
             {
-                var details = await _innerClient.GetSchemaAsync(key, version, cancellationToken);
+                var details = await _innerClient.GetSchemaAsync(subjectName, version, cancellationToken);
                 cacheItem = new CacheItem<SchemaDetails>
                 {
                     Value = details,
