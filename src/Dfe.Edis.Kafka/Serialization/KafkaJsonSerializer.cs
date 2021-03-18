@@ -26,6 +26,7 @@ namespace Dfe.Edis.Kafka.Serialization
             var json = JsonSerializer.Serialize(data, new JsonSerializerOptions // TODO: Make this configurable
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                IgnoreNullValues = true,
             });
 
             var subjectName = $"{context.Topic}-{context.Component.ToString().ToLower()}";
