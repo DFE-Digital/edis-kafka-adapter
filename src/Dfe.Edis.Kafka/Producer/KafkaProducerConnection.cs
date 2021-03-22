@@ -17,8 +17,8 @@ namespace Dfe.Edis.Kafka.Producer
             };
             if (!string.IsNullOrEmpty(configuration.SaslUsername))
             {
-                producerConfig.SecurityProtocol = SecurityProtocol.SaslSsl;
-                producerConfig.SaslMechanism = SaslMechanism.Plain;
+                producerConfig.SecurityProtocol = SecurityProtocol.SaslPlaintext;
+                producerConfig.SaslMechanism = SaslMechanism.OAuthBearer;
                 producerConfig.SaslUsername = configuration.SaslUsername;
                 producerConfig.SaslPassword = configuration.SaslPassword;
             }
